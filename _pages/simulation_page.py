@@ -89,21 +89,21 @@ def render_enhanced_simulation():
         with col1:
             cpm = st.number_input(
                 "CPM ($)",
-                min_value=0.1, max_value=50.0, value=CONFIG.ua.cpm, step=0.5,
+                min_value=0.1, max_value=5000.0, value=CONFIG.ua.cpm, step=0.5,
                 help="Cost per Mille - Chi phí cho 1000 lượt hiển thị quảng cáo"
             )
             
         with col2:
             ctr = st.number_input(
                 "CTR (%)",
-                min_value=0.1, max_value=10.0, value=CONFIG.ua.ctr * 100, step=0.1,
+                min_value=0.1, max_value=1000.0, value=CONFIG.ua.ctr * 100, step=0.1,
                 help="Click-Through Rate - Tỷ lệ click trên quảng cáo"
             ) / 100
             
         with col3:
             cvr = st.number_input(
                 "CVR (%)",
-                min_value=1.0, max_value=80.0, value=CONFIG.ua.cvr * 100, step=1.0,
+                min_value=1.0, max_value=8000.0, value=CONFIG.ua.cvr * 100, step=1.0,
                 help="Conversion Rate - Tỷ lệ click → install"
             ) / 100
         
@@ -148,13 +148,13 @@ def render_enhanced_simulation():
                 st.markdown("#### 📊 Giá trị tại D0")
                 ecpm_d0 = st.number_input(
                     "eCPM tại D0 ($)",
-                    min_value=1.0, max_value=50.0, value=CONFIG.ads.ecpm_d0, step=0.5,
+                    min_value=1.0, max_value=5000.0, value=CONFIG.ads.ecpm_d0, step=0.5,
                     help="Doanh thu trung bình cho 1000 impressions tại ngày đầu tiên"
                 )
                 
                 impressions_d0 = st.number_input(
                     "Impressions/DAU tại D0",
-                    min_value=1.0, max_value=20.0, value=CONFIG.ads.impressions_per_dau_d0, step=0.5,
+                    min_value=1.0, max_value=2000.0, value=CONFIG.ads.impressions_per_dau_d0, step=0.5,
                     help="Số lượt xem quảng cáo mỗi user mỗi ngày tại D0"
                 )
                 
@@ -342,7 +342,7 @@ def render_enhanced_simulation():
                 st.markdown("#### Weekly Subscription")
                 col1, col2 = st.columns(2)
                 with col1:
-                    weekly_price = st.number_input("Giá ($)", 0.99, 9.99, 2.99, 0.50, key="weekly_price")
+                    weekly_price = st.number_input("Giá ($)", 0.99, 999.0, 2.99, 0.50, key="weekly_price")
                     weekly_pay_rate = st.slider("Pay Rate (%)", 0.0, 100.0, 2.0, 0.5, key="weekly_pay", help="% users mua gói này") / 100
                     weekly_has_trial = st.checkbox("Có Trial", True, key="weekly_trial")
                 with col2:
@@ -416,7 +416,7 @@ def render_enhanced_simulation():
                 st.markdown("#### Monthly Subscription")
                 col1, col2 = st.columns(2)
                 with col1:
-                    monthly_price = st.number_input("Giá ($)", 1.99, 29.99, 9.99, 1.0, key="monthly_price")
+                    monthly_price = st.number_input("Giá ($)", 1.99, 2999.0, 9.99, 1.0, key="monthly_price")
                     monthly_pay_rate = st.slider("Pay Rate (%)", 0.0, 100.0, 3.0, 0.5, key="monthly_pay") / 100
                     monthly_has_trial = st.checkbox("Có Trial", True, key="monthly_trial")
                 with col2:
@@ -485,7 +485,7 @@ def render_enhanced_simulation():
                 st.markdown("#### Yearly Subscription")
                 col1, col2 = st.columns(2)
                 with col1:
-                    yearly_price = st.number_input("Giá ($)", 9.99, 149.99, 49.99, 5.0, key="yearly_price")
+                    yearly_price = st.number_input("Giá ($)", 9.99, 14999.0, 49.99, 5.0, key="yearly_price")
                     yearly_pay_rate = st.slider("Pay Rate (%)", 0.0, 100.0, 1.0, 0.2, key="yearly_pay") / 100
                     yearly_has_trial = st.checkbox("Có Trial", True, key="yearly_trial")
                 with col2:
@@ -509,7 +509,7 @@ def render_enhanced_simulation():
                 st.markdown("#### Lifetime (One-time Purchase)")
                 col1, col2 = st.columns(2)
                 with col1:
-                    lifetime_price = st.number_input("Giá ($)", 29.99, 299.99, 99.99, 10.0, key="lifetime_price")
+                    lifetime_price = st.number_input("Giá ($)", 29.99, 29999.0, 99.99, 10.0, key="lifetime_price")
                     lifetime_pay_rate = st.slider("Pay Rate (%)", 0.0, 100.0, 0.5, 0.1, key="lifetime_pay") / 100
                 with col2:
                     st.info("💡 Lifetime không có trial và không cần renewal")
@@ -549,7 +549,7 @@ def render_enhanced_simulation():
         with col1:
             cpm_variation = st.slider(
                 "CPM Variation (%)",
-                min_value=0.0, max_value=50.0, value=1.0, step=0.5,
+                min_value=0.0, max_value=5000.0, value=1.0, step=0.5,
                 help="Độ biến động của CPM giữa các kịch bản",
                 key="var_cpm"
             ) / 100
@@ -557,7 +557,7 @@ def render_enhanced_simulation():
         with col2:
             ctr_variation = st.slider(
                 "CTR Variation (%)",
-                min_value=0.0, max_value=50.0, value=1.0, step=0.5,
+                min_value=0.0, max_value=5000.0, value=1.0, step=0.5,
                 help="Độ biến động của Click-Through Rate",
                 key="var_ctr"
             ) / 100
@@ -565,7 +565,7 @@ def render_enhanced_simulation():
         with col3:
             cvr_variation = st.slider(
                 "CVR Variation (%)",
-                min_value=0.0, max_value=60.0, value=1.0, step=0.5,
+                min_value=0.0, max_value=6000.0, value=1.0, step=0.5,
                 help="Độ biến động của Conversion Rate",
                 key="var_cvr"
             ) / 100
@@ -579,7 +579,7 @@ def render_enhanced_simulation():
         with col1:
             ecpm_variation = st.slider(
                 "eCPM Variation (%)",
-                min_value=0.0, max_value=50.0, value=1.0, step=0.5,
+                min_value=0.0, max_value=5000.0, value=1.0, step=0.5,
                 help="Độ biến động của eCPM",
                 key="var_ecpm"
             ) / 100
@@ -587,7 +587,7 @@ def render_enhanced_simulation():
         with col2:
             impressions_variation = st.slider(
                 "Impressions Variation (%)",
-                min_value=0.0, max_value=40.0, value=1.0, step=0.5,
+                min_value=0.0, max_value=4000.0, value=1.0, step=0.5,
                 help="Độ biến động của số lượt xem quảng cáo",
                 key="var_impressions"
             ) / 100
@@ -601,7 +601,7 @@ def render_enhanced_simulation():
         with col1:
             retention_variation = st.slider(
                 "Retention Variation (%)",
-                min_value=0.0, max_value=40.0, value=1.0, step=0.5,
+                min_value=0.0, max_value=4000.0, value=1.0, step=0.5,
                 help="Độ biến động của tỷ lệ retention",
                 key="var_retention"
             ) / 100
@@ -609,7 +609,7 @@ def render_enhanced_simulation():
         with col2:
             pay_rate_variation = st.slider(
                 "Pay Rate Variation (%)",
-                min_value=0.0, max_value=60.0, value=1.0, step=0.5,
+                min_value=0.0, max_value=6000.0, value=1.0, step=0.5,
                 help="Độ biến động của tỷ lệ subscribe",
                 key="var_pay_rate"
             ) / 100
@@ -617,7 +617,7 @@ def render_enhanced_simulation():
         with col3:
             sub_ret_variation = st.slider(
                 "Sub Retention Variation (%)",
-                min_value=0.0, max_value=40.0, value=1.0, step=0.5,
+                min_value=0.0, max_value=4000.0, value=1.0, step=0.5,
                 help="Độ biến động của tỷ lệ giữ chân subscription",
                 key="var_sub_ret"
             ) / 100
@@ -858,7 +858,7 @@ def render_enhanced_simulation():
         with input_col1:
             camp_name = st.text_input("Tên Campaign", value="", key="camp_name_input",
                                        placeholder="VD: Facebook_US_Dec")
-            camp_cpi = st.number_input("CPI thực tế ($)", min_value=0.01, max_value=50.0, 
+            camp_cpi = st.number_input("CPI thực tế ($)", min_value=0.01, max_value=5000.0, 
                                        value=0.50, step=0.05, key="camp_cpi_input")
             camp_installs = st.number_input("Số Installs", min_value=100, max_value=1000000,
                                             value=1000, step=100, key="camp_installs_input")
@@ -868,7 +868,7 @@ def render_enhanced_simulation():
                                           value=40.0, step=1.0, key="camp_d1_ret_input")
             camp_d7_ret = st.number_input("D7 Retention (%)", min_value=1.0, max_value=100.0,
                                           value=20.0, step=1.0, key="camp_d7_ret_input")
-            camp_d7_arpu = st.number_input("D7 ARPU ($)", min_value=0.0, max_value=50.0,
+            camp_d7_arpu = st.number_input("D7 ARPU ($)", min_value=0.0, max_value=5000.0,
                                            value=0.10, step=0.01, key="camp_d7_arpu_input")
         
         # Add Campaign Button
