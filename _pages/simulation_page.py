@@ -1468,6 +1468,66 @@ def render_enhanced_simulation():
                 )
             )
             st.plotly_chart(fig_curves, use_container_width=True)
+            
+            # --- CSV Export for ROAS Curves ---
+            st.markdown("##### 📥 Export dữ liệu ROAS Curves")
+            
+            # Build export DataFrame
+            export_data = {'Day': milestone_days, 'Milestone': milestones}
+            
+            # Add percentile columns
+            for p, label in [(5, 'P5_Pessimistic'), (25, 'P25_Safe'), (50, 'P50_Median'), (75, 'P75_Breakthrough'), (95, 'P95_Optimistic')]:
+                p_values = []
+                for i, m in enumerate(milestones):
+                    values = []
+                    for r in raw_results:
+                        curve = r.get('roas_curve', {})
+                        if m in curve:
+                            values.append(curve[m] * 100)
+                        else:
+                            day_num = milestone_days[i]
+                            values.append(r.get('roas', 0) * (day_num / 365) * 100)
+                    p_values.append(round(np.percentile(values, p), 2))
+                export_data[f'ROAS_{label}'] = p_values
+            
+            # Add mean column
+            mean_values = []
+            for i, m in enumerate(milestones):
+                values = []
+                for r in raw_results:
+                    curve = r.get('roas_curve', {})
+                    if m in curve:
+                        values.append(curve[m] * 100)
+                    else:
+                        day_num = milestone_days[i]
+                        values.append(r.get('roas', 0) * (day_num / 365) * 100)
+                mean_values.append(round(np.mean(values), 2))
+            export_data['ROAS_Mean'] = mean_values
+            
+            # Add individual scenario columns (sampled)
+            for idx in sample_indices:
+                result = raw_results[idx]
+                curve = result.get('roas_curve', {})
+                scenario_values = []
+                for i, m in enumerate(milestones):
+                    if m in curve:
+                        scenario_values.append(round(curve[m] * 100, 2))
+                    else:
+                        day_num = milestone_days[i]
+                        scenario_values.append(round(result.get('roas', 0) * (day_num / 365) * 100, 2))
+                export_data[f'Scenario_{idx+1}'] = scenario_values
+            
+            export_df = pd.DataFrame(export_data)
+            csv_data = export_df.to_csv(index=False)
+            
+            export_filename = f"roas_curves_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+            st.download_button(
+                label="📥 Tải CSV - ROAS Curves Data",
+                data=csv_data,
+                file_name=export_filename,
+                mime="text/csv",
+                key="download_roas_curves_csv"
+            )
         else:
             st.info("💡 Dữ liệu ROAS curve không khả dụng. Vui lòng chạy lại simulation.")
         
