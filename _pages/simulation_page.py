@@ -1336,12 +1336,29 @@ def render_enhanced_simulation():
             if 'lifetime' in subscription_params:
                 custom_config.subscription.lifetime.price = subscription_params['lifetime']['price']
                 custom_config.subscription.lifetime.pay_rate = subscription_params['lifetime']['pay_rate']
+            # Zero out plans that are NOT enabled (not in subscription_params)
+            if 'weekly' not in subscription_params:
+                custom_config.subscription.weekly.pay_rate = 0
+                custom_config.subscription.weekly.offer_pay_rate = 0
+            if 'monthly' not in subscription_params:
+                custom_config.subscription.monthly.pay_rate = 0
+                custom_config.subscription.monthly.offer_pay_rate = 0
+            if 'yearly' not in subscription_params:
+                custom_config.subscription.yearly.pay_rate = 0
+                custom_config.subscription.yearly.offer_pay_rate = 0
+            if 'lifetime' not in subscription_params:
+                custom_config.subscription.lifetime.pay_rate = 0
+                custom_config.subscription.lifetime.offer_pay_rate = 0
         else:
             # Disable subscription revenue by setting all pay_rates to 0
             custom_config.subscription.weekly.pay_rate = 0
+            custom_config.subscription.weekly.offer_pay_rate = 0
             custom_config.subscription.monthly.pay_rate = 0
+            custom_config.subscription.monthly.offer_pay_rate = 0
             custom_config.subscription.yearly.pay_rate = 0
+            custom_config.subscription.yearly.offer_pay_rate = 0
             custom_config.subscription.lifetime.pay_rate = 0
+            custom_config.subscription.lifetime.offer_pay_rate = 0
         
         custom_config.simulation_days = sim_days
         
