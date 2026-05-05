@@ -225,6 +225,12 @@ class SubscriptionPlan:
     trial_days: int = 3                 # Số ngày trial
     trial_to_paid_rate: float = 0.20    # Tỷ lệ convert từ trial → paid
     
+    # Discounted Offer (thay thế trial bằng giá ưu đãi cho billing period đầu)
+    has_offer: bool = False             # Có discounted offer không
+    offer_price: float = 0.99           # Giá ưu đãi cho billing period đầu ($)
+    offer_to_paid_rate: float = 0.30    # Tỷ lệ convert từ offer → full-price paid
+    offer_pay_rate: float = 0.0         # % users đi qua offer path (tách biệt với trial)
+    
     # Subscription Retention Curve (thay thế renewal_rates)
     sub_retention: SubscriptionRetentionCurve = field(default_factory=SubscriptionRetentionCurve)
     

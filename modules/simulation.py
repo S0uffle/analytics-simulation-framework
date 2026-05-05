@@ -230,41 +230,59 @@ class EnhancedMonteCarloSimulator:
             for plan in cfg.subscription.get_all_plans():
                 effective_pay_rate = plan.pay_rate * params.pay_rate_mult
                 
+                # === PATH 1: Trial path (free trial → paid) ===
                 if plan.has_trial:
-                    expected_subscribers = effective_pay_rate * plan.trial_to_paid_rate
+                    trial_subscribers = effective_pay_rate * plan.trial_to_paid_rate
                 else:
-                    expected_subscribers = effective_pay_rate
+                    trial_subscribers = effective_pay_rate
                 
-                # First payment
+                # First payment (trial path)
                 first_day = exploitation_day + (plan.trial_days if plan.has_trial else 0)
                 if first_day <= days:
-                    # Cycle 0: 100% of those who converted (no App_Retention needed for subscription)
                     current_sub_retention = 1.0 
-                    
-                    # LTV_Sub = Pay_Rate × Trial_to_Paid × Sub_Retention × Price
-                    # (App_Retention removed - subscription auto-renews via app store)
-                    payment = expected_subscribers * current_sub_retention * plan.price
+                    payment = trial_subscribers * current_sub_retention * plan.price
                     iap_events.append((first_day, payment))
                     
-                    # Renewal payments
+                    # Renewal payments (trial path)
                     if plan.duration_days < 36500:
                         cycle = 1
                         next_day = first_day + plan.duration_days
                         
                         while next_day <= days and cycle <= 52:
-                            # Calculate renewal rate for this step (Sub Retention k / Sub Retention k-1)
                             step_renewal_rate = plan.get_renewal_rate(cycle) * params.renewal_mult
-                            
-                            # Update cumulative subscription retention
                             current_sub_retention *= step_renewal_rate
-                            
-                            # Calculate revenue: Initial_Subs × Sub_Retention × Price
-                            # (App_Retention removed - subscription auto-renews via app store)
-                            payment = expected_subscribers * current_sub_retention * plan.price
+                            payment = trial_subscribers * current_sub_retention * plan.price
                             iap_events.append((next_day, payment))
                             
                             next_day += plan.duration_days
                             cycle += 1
+                
+                # === PATH 2: Discounted Offer path (offer price → full price) ===
+                if plan.has_offer and plan.offer_pay_rate > 0:
+                    effective_offer_pay_rate = plan.offer_pay_rate * params.pay_rate_mult
+                    
+                    # First payment at discounted offer price (immediate, no trial delay)
+                    offer_first_day = exploitation_day
+                    if offer_first_day <= days:
+                        # All offer users pay offer_price for the first billing period
+                        offer_payment = effective_offer_pay_rate * plan.offer_price
+                        iap_events.append((offer_first_day, offer_payment))
+                        
+                        # After first billing period, offer_to_paid_rate convert to full price
+                        if plan.duration_days < 36500:
+                            offer_converted = effective_offer_pay_rate * plan.offer_to_paid_rate
+                            offer_sub_retention = 1.0
+                            cycle = 1
+                            next_day = offer_first_day + plan.duration_days
+                            
+                            while next_day <= days and cycle <= 52:
+                                step_renewal_rate = plan.get_renewal_rate(cycle) * params.renewal_mult
+                                offer_sub_retention *= step_renewal_rate
+                                payment = offer_converted * offer_sub_retention * plan.price
+                                iap_events.append((next_day, payment))
+                                
+                                next_day += plan.duration_days
+                                cycle += 1
             
             # Sort events by day and calculate cumulative IAP at milestones
             iap_events.sort(key=lambda x: x[0])
@@ -321,16 +339,17 @@ class EnhancedMonteCarloSimulator:
             for plan in cfg.subscription.get_all_plans():
                 effective_pay_rate = plan.pay_rate * params.pay_rate_mult
                 
+                # === PATH 1: Trial path ===
                 if plan.has_trial:
-                    expected_subscribers = effective_pay_rate * plan.trial_to_paid_rate
+                    trial_subscribers = effective_pay_rate * plan.trial_to_paid_rate
                 else:
-                    expected_subscribers = effective_pay_rate
+                    trial_subscribers = effective_pay_rate
                 
-                # First payment
+                # First payment (trial path)
                 first_day = exploitation_day + (plan.trial_days if plan.has_trial else 0)
                 if first_day <= days:
                     current_sub_retention = 1.0
-                    payment = expected_subscribers * current_sub_retention * plan.price
+                    payment = trial_subscribers * current_sub_retention * plan.price
                     iap_events.append((first_day, payment))
                     
                     # Renewal payments with sampled renewal_mult
@@ -341,11 +360,35 @@ class EnhancedMonteCarloSimulator:
                         while next_day <= days and cycle <= 52:
                             step_renewal_rate = plan.get_renewal_rate(cycle) * params.renewal_mult
                             current_sub_retention *= step_renewal_rate
-                            payment = expected_subscribers * current_sub_retention * plan.price
+                            payment = trial_subscribers * current_sub_retention * plan.price
                             iap_events.append((next_day, payment))
                             
                             next_day += plan.duration_days
                             cycle += 1
+                
+                # === PATH 2: Discounted Offer path ===
+                if plan.has_offer and plan.offer_pay_rate > 0:
+                    effective_offer_pay_rate = plan.offer_pay_rate * params.pay_rate_mult
+                    
+                    offer_first_day = exploitation_day
+                    if offer_first_day <= days:
+                        offer_payment = effective_offer_pay_rate * plan.offer_price
+                        iap_events.append((offer_first_day, offer_payment))
+                        
+                        if plan.duration_days < 36500:
+                            offer_converted = effective_offer_pay_rate * plan.offer_to_paid_rate
+                            offer_sub_retention = 1.0
+                            cycle = 1
+                            next_day = offer_first_day + plan.duration_days
+                            
+                            while next_day <= days and cycle <= 52:
+                                step_renewal_rate = plan.get_renewal_rate(cycle) * params.renewal_mult
+                                offer_sub_retention *= step_renewal_rate
+                                payment = offer_converted * offer_sub_retention * plan.price
+                                iap_events.append((next_day, payment))
+                                
+                                next_day += plan.duration_days
+                                cycle += 1
             
             ltv_iap = sum(e[1] for e in iap_events)
             
