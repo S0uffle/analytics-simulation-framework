@@ -331,80 +331,27 @@ def render_enhanced_simulation():
             
             st.markdown("---")
             
-            # Build dynamic tabs based on enabled plans
-            _tab_labels = []
-            _tab_keys = []
-            if enable_weekly:
-                _tab_labels.append("📅 Weekly")
-                _tab_keys.append("weekly")
-            if enable_monthly:
-                _tab_labels.append("📆 Monthly")
-                _tab_keys.append("monthly")
-            if enable_yearly:
-                _tab_labels.append("📅 Yearly")
-                _tab_keys.append("yearly")
-            if enable_lifetime:
-                _tab_labels.append("♾️ Lifetime")
-                _tab_keys.append("lifetime")
+            # Create tabs for each subscription plan
+            sub_weekly, sub_monthly, sub_yearly, sub_lifetime = st.tabs([
+                "📅 Weekly", "📆 Monthly", "📅 Yearly", "♾️ Lifetime"
+            ])
             
             subscription_params = {}
-            _tab_map = {}
-            
-            if not _tab_labels:
-                st.info("💡 Chưa chọn gói subscription nào. Tick checkbox ở trên để cấu hình.")
-            else:
-                _tabs = st.tabs(_tab_labels)
-                _tab_map = {k: _tabs[i] for i, k in enumerate(_tab_keys)}
         
-            if enable_weekly and 'weekly' in _tab_map:
-              with _tab_map['weekly']:
+            with sub_weekly:
                 st.markdown("#### Weekly Subscription")
                 col1, col2 = st.columns(2)
                 with col1:
                     weekly_price = st.number_input("Giá ($)", 0.99, 999.0, 2.99, 0.50, key="weekly_price")
                     weekly_pay_rate = st.slider("Pay Rate (%)", 0.0, 100.0, 2.0, 0.5, key="weekly_pay", help="% users mua gói này") / 100
-                
+                    weekly_has_trial = st.checkbox("Có Trial", True, key="weekly_trial")
                 with col2:
-                    weekly_onboard = st.radio(
-                        "Hình thức onboarding",
-                        ["🆓 Free Trial", "🏷️ Discounted Offer", "💳 Trả ngay (No Trial)"],
-                        index=0, key="weekly_onboard", horizontal=True
-                    )
-                
-                if weekly_onboard == "🆓 Free Trial":
-                    weekly_has_trial = True
-                    weekly_has_offer = False
-                    trial_col1, trial_col2 = st.columns(2)
-                    with trial_col1:
+                    if weekly_has_trial:
                         weekly_trial_days = st.number_input("Trial (ngày)", 1, 14, 3, key="weekly_trial_days")
-                    with trial_col2:
                         weekly_trial_rate = st.slider("Trial → Paid (%)", 0.0, 100.0, 15.0, 1.0, key="weekly_trial_rate") / 100
-                    weekly_offer_price = 0.99
-                    weekly_offer_pay_rate = 0.0
-                    weekly_offer_to_paid = 0.30
-                elif weekly_onboard == "🏷️ Discounted Offer":
-                    weekly_has_trial = False
-                    weekly_has_offer = True
-                    weekly_trial_days = 0
-                    weekly_trial_rate = 1.0
-                    offer_col1, offer_col2, offer_col3 = st.columns(3)
-                    with offer_col1:
-                        weekly_offer_price = st.number_input("Giá Offer ($)", 0.01, 999.0, 0.99, 0.10, key="weekly_offer_price",
-                                                              help="Giá ưu đãi cho billing period đầu tiên")
-                    with offer_col2:
-                        weekly_offer_pay_rate = st.slider("Offer Pay Rate (%)", 0.0, 100.0, 1.0, 0.5, key="weekly_offer_pay",
-                                                          help="% users đi qua luồng offer") / 100
-                    with offer_col3:
-                        weekly_offer_to_paid = st.slider("Offer → Full Price (%)", 0.0, 100.0, 30.0, 1.0, key="weekly_offer_topaid",
-                                                          help="% users chuyển sang trả full price sau period đầu") / 100
-                else:  # Trả ngay
-                    weekly_has_trial = False
-                    weekly_has_offer = False
-                    weekly_trial_days = 0
-                    weekly_trial_rate = 1.0
-                    weekly_offer_price = 0.99
-                    weekly_offer_pay_rate = 0.0
-                    weekly_offer_to_paid = 0.30
+                    else:
+                        weekly_trial_days = 0
+                        weekly_trial_rate = 1.0
                 
                 st.markdown("**Sub Retention (% còn lại):**")
                 ret_col1, ret_col2, ret_col3 = st.columns(3)
@@ -458,66 +405,27 @@ def render_enhanced_simulation():
                 st.plotly_chart(fig_weekly, use_container_width=True)
                 
                 subscription_params['weekly'] = {
-                    'price': weekly_price,
-                    'pay_rate': weekly_pay_rate if (enable_weekly and not weekly_has_offer) else 0,
+                    'price': weekly_price, 'pay_rate': weekly_pay_rate if enable_weekly else 0,
                     'has_trial': weekly_has_trial, 'trial_days': weekly_trial_days,
                     'trial_to_paid': weekly_trial_rate,
-                    'has_offer': weekly_has_offer, 'offer_price': weekly_offer_price,
-                    'offer_pay_rate': (weekly_offer_pay_rate if weekly_offer_pay_rate > 0 else weekly_pay_rate) if (enable_weekly and weekly_has_offer) else 0,
-                    'offer_to_paid': weekly_offer_to_paid,
                     'sub_ret_1': weekly_ret_1, 'sub_ret_4': weekly_ret_4, 'sub_ret_6': weekly_ret_6,
                     'sub_ret_9': weekly_ret_9, 'sub_ret_12': weekly_ret_12, 'sub_ret_18': weekly_ret_18,
                     'enabled': enable_weekly
                 }
-            if enable_monthly and 'monthly' in _tab_map:
-              with _tab_map['monthly']:
+            with sub_monthly:
                 st.markdown("#### Monthly Subscription")
                 col1, col2 = st.columns(2)
                 with col1:
                     monthly_price = st.number_input("Giá ($)", 1.99, 2999.0, 9.99, 1.0, key="monthly_price")
                     monthly_pay_rate = st.slider("Pay Rate (%)", 0.0, 100.0, 3.0, 0.5, key="monthly_pay") / 100
-                
+                    monthly_has_trial = st.checkbox("Có Trial", True, key="monthly_trial")
                 with col2:
-                    monthly_onboard = st.radio(
-                        "Hình thức onboarding",
-                        ["🆓 Free Trial", "🏷️ Discounted Offer", "💳 Trả ngay (No Trial)"],
-                        index=0, key="monthly_onboard", horizontal=True
-                    )
-                
-                if monthly_onboard == "🆓 Free Trial":
-                    monthly_has_trial = True
-                    monthly_has_offer = False
-                    trial_col1, trial_col2 = st.columns(2)
-                    with trial_col1:
+                    if monthly_has_trial:
                         monthly_trial_days = st.number_input("Trial (ngày)", 1, 30, 7, key="monthly_trial_days")
-                    with trial_col2:
                         monthly_trial_rate = st.slider("Trial → Paid (%)", 0.0, 100.0, 20.0, 1.0, key="monthly_trial_rate") / 100
-                    monthly_offer_price = 1.99
-                    monthly_offer_pay_rate = 0.0
-                    monthly_offer_to_paid = 0.35
-                elif monthly_onboard == "🏷️ Discounted Offer":
-                    monthly_has_trial = False
-                    monthly_has_offer = True
-                    monthly_trial_days = 0
-                    monthly_trial_rate = 1.0
-                    offer_col1, offer_col2, offer_col3 = st.columns(3)
-                    with offer_col1:
-                        monthly_offer_price = st.number_input("Giá Offer ($)", 0.01, 2999.0, 1.99, 0.50, key="monthly_offer_price",
-                                                              help="Giá ưu đãi cho billing period đầu tiên")
-                    with offer_col2:
-                        monthly_offer_pay_rate = st.slider("Offer Pay Rate (%)", 0.0, 100.0, 1.5, 0.5, key="monthly_offer_pay",
-                                                          help="% users đi qua luồng offer") / 100
-                    with offer_col3:
-                        monthly_offer_to_paid = st.slider("Offer → Full Price (%)", 0.0, 100.0, 35.0, 1.0, key="monthly_offer_topaid",
-                                                          help="% users chuyển sang trả full price") / 100
-                else:  # Trả ngay
-                    monthly_has_trial = False
-                    monthly_has_offer = False
-                    monthly_trial_days = 0
-                    monthly_trial_rate = 1.0
-                    monthly_offer_price = 1.99
-                    monthly_offer_pay_rate = 0.0
-                    monthly_offer_to_paid = 0.35
+                    else:
+                        monthly_trial_days = 0
+                        monthly_trial_rate = 1.0
                 
                 st.markdown("**Sub Retention (% còn lại):**")
                 ret_col1, ret_col2 = st.columns(2)
@@ -566,81 +474,38 @@ def render_enhanced_simulation():
                 st.plotly_chart(fig_monthly, use_container_width=True)
                 
                 subscription_params['monthly'] = {
-                    'price': monthly_price,
-                    'pay_rate': monthly_pay_rate if (enable_monthly and not monthly_has_offer) else 0,
+                    'price': monthly_price, 'pay_rate': monthly_pay_rate if enable_monthly else 0,
                     'has_trial': monthly_has_trial, 'trial_days': monthly_trial_days,
                     'trial_to_paid': monthly_trial_rate,
-                    'has_offer': monthly_has_offer, 'offer_price': monthly_offer_price,
-                    'offer_pay_rate': (monthly_offer_pay_rate if monthly_offer_pay_rate > 0 else monthly_pay_rate) if (enable_monthly and monthly_has_offer) else 0,
-                    'offer_to_paid': monthly_offer_to_paid,
                     'sub_ret_1': monthly_ret_1, 'sub_ret_3': monthly_ret_3, 'sub_ret_6': monthly_ret_6, 'sub_ret_12': monthly_ret_12,
                     'enabled': enable_monthly
                 }
             
-            if enable_yearly and 'yearly' in _tab_map:
-              with _tab_map['yearly']:
+            with sub_yearly:
                 st.markdown("#### Yearly Subscription")
                 col1, col2 = st.columns(2)
                 with col1:
                     yearly_price = st.number_input("Giá ($)", 9.99, 14999.0, 49.99, 5.0, key="yearly_price")
                     yearly_pay_rate = st.slider("Pay Rate (%)", 0.0, 100.0, 1.0, 0.2, key="yearly_pay") / 100
-                
+                    yearly_has_trial = st.checkbox("Có Trial", True, key="yearly_trial")
                 with col2:
-                    yearly_onboard = st.radio(
-                        "Hình thức onboarding",
-                        ["🆓 Free Trial", "🏷️ Discounted Offer", "💳 Trả ngay (No Trial)"],
-                        index=0, key="yearly_onboard", horizontal=True
-                    )
+                    if yearly_has_trial:
+                        yearly_trial_days = st.number_input("Trial (ngày)", 1, 30, 7, key="yearly_trial_days")
+                        yearly_trial_rate = st.slider("Trial → Paid (%)", 0.0, 100.0, 25.0, 1.0, key="yearly_trial_rate") / 100
+                    else:
+                        yearly_trial_days = 0
+                        yearly_trial_rate = 1.0
+                        
                     st.info("💡 Với cohort 365 ngày, gói Yearly chỉ có 1 lần thanh toán (không renewal)")
                 
-                if yearly_onboard == "🆓 Free Trial":
-                    yearly_has_trial = True
-                    yearly_has_offer = False
-                    trial_col1, trial_col2 = st.columns(2)
-                    with trial_col1:
-                        yearly_trial_days = st.number_input("Trial (ngày)", 1, 30, 7, key="yearly_trial_days")
-                    with trial_col2:
-                        yearly_trial_rate = st.slider("Trial → Paid (%)", 0.0, 100.0, 25.0, 1.0, key="yearly_trial_rate") / 100
-                    yearly_offer_price = 19.99
-                    yearly_offer_pay_rate = 0.0
-                    yearly_offer_to_paid = 0.40
-                elif yearly_onboard == "🏷️ Discounted Offer":
-                    yearly_has_trial = False
-                    yearly_has_offer = True
-                    yearly_trial_days = 0
-                    yearly_trial_rate = 1.0
-                    offer_col1, offer_col2, offer_col3 = st.columns(3)
-                    with offer_col1:
-                        yearly_offer_price = st.number_input("Giá Offer ($)", 0.01, 14999.0, 19.99, 5.0, key="yearly_offer_price",
-                                                              help="Giá ưu đãi cho năm đầu tiên")
-                    with offer_col2:
-                        yearly_offer_pay_rate = st.slider("Offer Pay Rate (%)", 0.0, 100.0, 0.5, 0.1, key="yearly_offer_pay",
-                                                          help="% users đi qua luồng offer") / 100
-                    with offer_col3:
-                        yearly_offer_to_paid = st.slider("Offer → Full Price (%)", 0.0, 100.0, 40.0, 1.0, key="yearly_offer_topaid",
-                                                          help="% users chuyển sang trả full price năm sau") / 100
-                else:  # Trả ngay
-                    yearly_has_trial = False
-                    yearly_has_offer = False
-                    yearly_trial_days = 0
-                    yearly_trial_rate = 1.0
-                    yearly_offer_price = 19.99
-                    yearly_offer_pay_rate = 0.0
-                    yearly_offer_to_paid = 0.40
-                
                 subscription_params['yearly'] = {
-                    'price': yearly_price,
-                    'pay_rate': yearly_pay_rate if (enable_yearly and not yearly_has_offer) else 0,
+                    'price': yearly_price, 'pay_rate': yearly_pay_rate if enable_yearly else 0,
                     'has_trial': yearly_has_trial, 'trial_days': yearly_trial_days,
                     'trial_to_paid': yearly_trial_rate,
-                    'has_offer': yearly_has_offer, 'offer_price': yearly_offer_price,
-                    'offer_pay_rate': (yearly_offer_pay_rate if yearly_offer_pay_rate > 0 else yearly_pay_rate) if (enable_yearly and yearly_has_offer) else 0,
-                    'offer_to_paid': yearly_offer_to_paid,
                     'enabled': enable_yearly
                 }
             
-            if enable_lifetime and 'lifetime' in _tab_map:
-              with _tab_map['lifetime']:
+            with sub_lifetime:
                 st.markdown("#### Lifetime (One-time Purchase)")
                 col1, col2 = st.columns(2)
                 with col1:
@@ -657,7 +522,7 @@ def render_enhanced_simulation():
                 }
             
             # Summary
-            total_pay_rate = sum([p['pay_rate'] + p.get('offer_pay_rate', 0) for p in subscription_params.values()])
+            total_pay_rate = sum([p['pay_rate'] for p in subscription_params.values()])
             st.markdown(f"**Tổng Pay Rate:** {total_pay_rate * 100:.1f}% users sẽ subscribe bất kỳ gói nào")
     
     # =========================================================================
@@ -1292,10 +1157,6 @@ def render_enhanced_simulation():
                 custom_config.subscription.weekly.has_trial = subscription_params['weekly']['has_trial']
                 custom_config.subscription.weekly.trial_days = subscription_params['weekly']['trial_days']
                 custom_config.subscription.weekly.trial_to_paid_rate = subscription_params['weekly']['trial_to_paid']
-                custom_config.subscription.weekly.has_offer = subscription_params['weekly'].get('has_offer', False)
-                custom_config.subscription.weekly.offer_price = subscription_params['weekly'].get('offer_price', 0.99)
-                custom_config.subscription.weekly.offer_pay_rate = subscription_params['weekly'].get('offer_pay_rate', 0)
-                custom_config.subscription.weekly.offer_to_paid_rate = subscription_params['weekly'].get('offer_to_paid', 0.30)
                 custom_config.subscription.weekly.sub_retention.cycle_1 = subscription_params['weekly']['sub_ret_1']
                 custom_config.subscription.weekly.sub_retention.cycle_4 = subscription_params['weekly']['sub_ret_4']
                 custom_config.subscription.weekly.sub_retention.cycle_6 = subscription_params['weekly']['sub_ret_6']
@@ -1310,10 +1171,6 @@ def render_enhanced_simulation():
                 custom_config.subscription.monthly.has_trial = subscription_params['monthly']['has_trial']
                 custom_config.subscription.monthly.trial_days = subscription_params['monthly']['trial_days']
                 custom_config.subscription.monthly.trial_to_paid_rate = subscription_params['monthly']['trial_to_paid']
-                custom_config.subscription.monthly.has_offer = subscription_params['monthly'].get('has_offer', False)
-                custom_config.subscription.monthly.offer_price = subscription_params['monthly'].get('offer_price', 1.99)
-                custom_config.subscription.monthly.offer_pay_rate = subscription_params['monthly'].get('offer_pay_rate', 0)
-                custom_config.subscription.monthly.offer_to_paid_rate = subscription_params['monthly'].get('offer_to_paid', 0.35)
                 custom_config.subscription.monthly.sub_retention.cycle_1 = subscription_params['monthly']['sub_ret_1']
                 custom_config.subscription.monthly.sub_retention.cycle_3 = subscription_params['monthly']['sub_ret_3']
                 custom_config.subscription.monthly.sub_retention.cycle_6 = subscription_params['monthly']['sub_ret_6']
@@ -1326,39 +1183,18 @@ def render_enhanced_simulation():
                 custom_config.subscription.yearly.has_trial = subscription_params['yearly']['has_trial']
                 custom_config.subscription.yearly.trial_days = subscription_params['yearly']['trial_days']
                 custom_config.subscription.yearly.trial_to_paid_rate = subscription_params['yearly']['trial_to_paid']
-                custom_config.subscription.yearly.has_offer = subscription_params['yearly'].get('has_offer', False)
-                custom_config.subscription.yearly.offer_price = subscription_params['yearly'].get('offer_price', 19.99)
-                custom_config.subscription.yearly.offer_pay_rate = subscription_params['yearly'].get('offer_pay_rate', 0)
-                custom_config.subscription.yearly.offer_to_paid_rate = subscription_params['yearly'].get('offer_to_paid', 0.40)
                 # Yearly không có renewal trong 360 ngày
             
             # Lifetime
             if 'lifetime' in subscription_params:
                 custom_config.subscription.lifetime.price = subscription_params['lifetime']['price']
                 custom_config.subscription.lifetime.pay_rate = subscription_params['lifetime']['pay_rate']
-            # Zero out plans that are NOT enabled (not in subscription_params)
-            if 'weekly' not in subscription_params:
-                custom_config.subscription.weekly.pay_rate = 0
-                custom_config.subscription.weekly.offer_pay_rate = 0
-            if 'monthly' not in subscription_params:
-                custom_config.subscription.monthly.pay_rate = 0
-                custom_config.subscription.monthly.offer_pay_rate = 0
-            if 'yearly' not in subscription_params:
-                custom_config.subscription.yearly.pay_rate = 0
-                custom_config.subscription.yearly.offer_pay_rate = 0
-            if 'lifetime' not in subscription_params:
-                custom_config.subscription.lifetime.pay_rate = 0
-                custom_config.subscription.lifetime.offer_pay_rate = 0
         else:
             # Disable subscription revenue by setting all pay_rates to 0
             custom_config.subscription.weekly.pay_rate = 0
-            custom_config.subscription.weekly.offer_pay_rate = 0
             custom_config.subscription.monthly.pay_rate = 0
-            custom_config.subscription.monthly.offer_pay_rate = 0
             custom_config.subscription.yearly.pay_rate = 0
-            custom_config.subscription.yearly.offer_pay_rate = 0
             custom_config.subscription.lifetime.pay_rate = 0
-            custom_config.subscription.lifetime.offer_pay_rate = 0
         
         custom_config.simulation_days = sim_days
         
