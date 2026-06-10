@@ -294,6 +294,15 @@ def render_enhanced_simulation():
             st.info("💡 Subscription / IAP đã được tắt. Bật lại ở tab **Chung** để cấu hình.")
             # Set default empty subscription params when disabled
             subscription_params = {}
+            
+            import json, os
+            sim_cfg = {}
+            if os.path.exists('sim_config.json'):
+                try:
+                    with open('sim_config.json', 'r') as f:
+                        sim_cfg = json.load(f)
+                except Exception:
+                    pass
             exploitation_day = 0
             platform_fee_pct = 0
         else:
@@ -337,33 +346,47 @@ def render_enhanced_simulation():
             ])
             
             subscription_params = {}
+            
+            import json, os
+            sim_cfg = {}
+            if os.path.exists('sim_config.json'):
+                try:
+                    with open('sim_config.json', 'r') as f:
+                        sim_cfg = json.load(f)
+                except Exception:
+                    pass
         
             with sub_weekly:
                 st.markdown("#### Weekly Subscription")
                 col1, col2 = st.columns(2)
                 with col1:
-                    weekly_price = st.number_input("Giá ($)", 0.99, 999.0, 2.99, 0.50, key="weekly_price")
-                    weekly_pay_rate = st.slider("Pay Rate (%)", 0.0, 100.0, 2.0, 0.5, key="weekly_pay", help="% users mua gói này") / 100
-                    weekly_has_trial = st.checkbox("Có Trial", True, key="weekly_trial")
+                    weekly_price = st.number_input("Giá ($)", 0.99, 999.0, float(sim_cfg.get("weekly_price", 2.99)), 0.50, key="weekly_price")
+                    weekly_pay_rate = st.slider("Pay Rate (%)", 0.0, 100.0, float(sim_cfg.get("weekly_pay_rate", 2.0)), 0.5, key="weekly_pay", help="% users mua gói này") / 100
+                    weekly_has_trial = st.checkbox("Có Trial", sim_cfg.get("weekly_has_trial", True), key="weekly_trial")
+                    weekly_has_intro = st.checkbox("Có giá ưu đãi tuần đầu", sim_cfg.get("weekly_has_intro", True), key="weekly_intro")
                 with col2:
                     if weekly_has_trial:
-                        weekly_trial_days = st.number_input("Trial (ngày)", 1, 14, 3, key="weekly_trial_days")
-                        weekly_trial_rate = st.slider("Trial → Paid (%)", 0.0, 100.0, 15.0, 1.0, key="weekly_trial_rate") / 100
+                        weekly_trial_days = st.number_input("Trial (ngày)", 1, 14, int(sim_cfg.get("weekly_trial_days", 3)), key="weekly_trial_days")
+                        weekly_trial_rate = st.slider("Trial → Paid (%)", 0.0, 100.0, float(sim_cfg.get("weekly_trial_rate", 15.0)), 1.0, key="weekly_trial_rate") / 100
                     else:
                         weekly_trial_days = 0
                         weekly_trial_rate = 1.0
+                    if weekly_has_intro:
+                        weekly_intro_price = st.number_input("Giá ưu đãi ($)", 0.0, 999.0, float(sim_cfg.get("weekly_intro_price", 0.99)), 0.50, key="weekly_intro_price")
+                    else:
+                        weekly_intro_price = 0.0
                 
                 st.markdown("**Sub Retention (% còn lại):**")
                 ret_col1, ret_col2, ret_col3 = st.columns(3)
                 with ret_col1:
-                    weekly_ret_1 = st.slider("Cycle 1 (Tuần 2)", 0, 100, 50, 1, key="weekly_ret1") / 100
-                    weekly_ret_4 = st.slider("Cycle 4 (1 tháng)", 0, 100, 31, 1, key="weekly_ret4") / 100
+                    weekly_ret_1 = st.slider("Cycle 1 (Gia hạn lần 1)", 0, 100, int(sim_cfg.get("weekly_ret_1", 50)), 1, key="weekly_ret1") / 100
+                    weekly_ret_4 = st.slider("Cycle 4 (1 tháng)", 0, 100, int(sim_cfg.get("weekly_ret_4", 31)), 1, key="weekly_ret4") / 100
                 with ret_col2:
-                    weekly_ret_6 = st.slider("Cycle 6 (1.5 tháng)", 0, 100, 24, 1, key="weekly_ret6") / 100
-                    weekly_ret_9 = st.slider("Cycle 9 (2 tháng)", 0, 100, 18, 1, key="weekly_ret9") / 100
+                    weekly_ret_6 = st.slider("Cycle 6 (1.5 tháng)", 0, 100, int(sim_cfg.get("weekly_ret_6", 24)), 1, key="weekly_ret6") / 100
+                    weekly_ret_9 = st.slider("Cycle 9 (2 tháng)", 0, 100, int(sim_cfg.get("weekly_ret_9", 18)), 1, key="weekly_ret9") / 100
                 with ret_col3:
-                    weekly_ret_12 = st.slider("Cycle 12 (3 tháng)", 0, 100, 15, 1, key="weekly_ret12") / 100
-                    weekly_ret_18 = st.slider("Cycle 18 (4.5 tháng)", 0, 100, 10, 1, key="weekly_ret18") / 100
+                    weekly_ret_12 = st.slider("Cycle 12 (3 tháng)", 0, 100, int(sim_cfg.get("weekly_ret_12", 15)), 1, key="weekly_ret12") / 100
+                    weekly_ret_18 = st.slider("Cycle 18 (4.5 tháng)", 0, 100, int(sim_cfg.get("weekly_ret_18", 10)), 1, key="weekly_ret18") / 100
                 
                 # Create SubscriptionRetentionCurve and interpolate full curve up to 52 cycles
                 from config import SubscriptionRetentionCurve
@@ -408,6 +431,7 @@ def render_enhanced_simulation():
                     'price': weekly_price, 'pay_rate': weekly_pay_rate if enable_weekly else 0,
                     'has_trial': weekly_has_trial, 'trial_days': weekly_trial_days,
                     'trial_to_paid': weekly_trial_rate,
+                    'has_intro_price': weekly_has_intro, 'intro_price': weekly_intro_price,
                     'sub_ret_1': weekly_ret_1, 'sub_ret_4': weekly_ret_4, 'sub_ret_6': weekly_ret_6,
                     'sub_ret_9': weekly_ret_9, 'sub_ret_12': weekly_ret_12, 'sub_ret_18': weekly_ret_18,
                     'enabled': enable_weekly
@@ -416,13 +440,13 @@ def render_enhanced_simulation():
                 st.markdown("#### Monthly Subscription")
                 col1, col2 = st.columns(2)
                 with col1:
-                    monthly_price = st.number_input("Giá ($)", 1.99, 2999.0, 9.99, 1.0, key="monthly_price")
-                    monthly_pay_rate = st.slider("Pay Rate (%)", 0.0, 100.0, 3.0, 0.5, key="monthly_pay") / 100
-                    monthly_has_trial = st.checkbox("Có Trial", True, key="monthly_trial")
+                    monthly_price = st.number_input("Giá ($)", 1.99, 2999.0, float(sim_cfg.get("monthly_price", 9.99)), 1.0, key="monthly_price")
+                    monthly_pay_rate = st.slider("Pay Rate (%)", 0.0, 100.0, float(sim_cfg.get("monthly_pay_rate", 3.0)), 0.5, key="monthly_pay") / 100
+                    monthly_has_trial = st.checkbox("Có Trial", sim_cfg.get("monthly_has_trial", True), key="monthly_trial")
                 with col2:
                     if monthly_has_trial:
-                        monthly_trial_days = st.number_input("Trial (ngày)", 1, 30, 7, key="monthly_trial_days")
-                        monthly_trial_rate = st.slider("Trial → Paid (%)", 0.0, 100.0, 20.0, 1.0, key="monthly_trial_rate") / 100
+                        monthly_trial_days = st.number_input("Trial (ngày)", 1, 30, int(sim_cfg.get("monthly_trial_days", 7)), key="monthly_trial_days")
+                        monthly_trial_rate = st.slider("Trial → Paid (%)", 0.0, 100.0, float(sim_cfg.get("monthly_trial_rate", 20.0)), 1.0, key="monthly_trial_rate") / 100
                     else:
                         monthly_trial_days = 0
                         monthly_trial_rate = 1.0
@@ -430,11 +454,11 @@ def render_enhanced_simulation():
                 st.markdown("**Sub Retention (% còn lại):**")
                 ret_col1, ret_col2 = st.columns(2)
                 with ret_col1:
-                    monthly_ret_1 = st.slider("Cycle 1 (Tháng 2)", 0, 100, 55, 1, key="monthly_ret1") / 100
-                    monthly_ret_3 = st.slider("Cycle 3 (3 tháng)", 0, 100, 42, 1, key="monthly_ret3") / 100
+                    monthly_ret_1 = st.slider("Cycle 1 (Gia hạn lần 1)", 0, 100, int(sim_cfg.get("monthly_ret_1", 55)), 1, key="monthly_ret1") / 100
+                    monthly_ret_3 = st.slider("Cycle 3 (3 tháng)", 0, 100, int(sim_cfg.get("monthly_ret_3", 42)), 1, key="monthly_ret3") / 100
                 with ret_col2:
-                    monthly_ret_6 = st.slider("Cycle 6 (6 tháng)", 0, 100, 30, 1, key="monthly_ret6") / 100
-                    monthly_ret_12 = st.slider("Cycle 12 (1 năm)", 0, 100, 20, 1, key="monthly_ret12") / 100
+                    monthly_ret_6 = st.slider("Cycle 6 (6 tháng)", 0, 100, int(sim_cfg.get("monthly_ret_6", 30)), 1, key="monthly_ret6") / 100
+                    monthly_ret_12 = st.slider("Cycle 12 (1 năm)", 0, 100, int(sim_cfg.get("monthly_ret_12", 20)), 1, key="monthly_ret12") / 100
                 
                 # Create SubscriptionRetentionCurve and interpolate full curve up to 12 cycles
                 monthly_sub_ret = SubscriptionRetentionCurve(
@@ -485,13 +509,13 @@ def render_enhanced_simulation():
                 st.markdown("#### Yearly Subscription")
                 col1, col2 = st.columns(2)
                 with col1:
-                    yearly_price = st.number_input("Giá ($)", 9.99, 14999.0, 49.99, 5.0, key="yearly_price")
-                    yearly_pay_rate = st.slider("Pay Rate (%)", 0.0, 100.0, 1.0, 0.2, key="yearly_pay") / 100
-                    yearly_has_trial = st.checkbox("Có Trial", True, key="yearly_trial")
+                    yearly_price = st.number_input("Giá ($)", 9.99, 14999.0, float(sim_cfg.get("yearly_price", 49.99)), 5.0, key="yearly_price")
+                    yearly_pay_rate = st.slider("Pay Rate (%)", 0.0, 100.0, float(sim_cfg.get("yearly_pay_rate", 1.0)), 0.2, key="yearly_pay") / 100
+                    yearly_has_trial = st.checkbox("Có Trial", sim_cfg.get("yearly_has_trial", True), key="yearly_trial")
                 with col2:
                     if yearly_has_trial:
-                        yearly_trial_days = st.number_input("Trial (ngày)", 1, 30, 7, key="yearly_trial_days")
-                        yearly_trial_rate = st.slider("Trial → Paid (%)", 0.0, 100.0, 25.0, 1.0, key="yearly_trial_rate") / 100
+                        yearly_trial_days = st.number_input("Trial (ngày)", 1, 30, int(sim_cfg.get("yearly_trial_days", 7)), key="yearly_trial_days")
+                        yearly_trial_rate = st.slider("Trial → Paid (%)", 0.0, 100.0, float(sim_cfg.get("yearly_trial_rate", 25.0)), 1.0, key="yearly_trial_rate") / 100
                     else:
                         yearly_trial_days = 0
                         yearly_trial_rate = 1.0
@@ -509,8 +533,8 @@ def render_enhanced_simulation():
                 st.markdown("#### Lifetime (One-time Purchase)")
                 col1, col2 = st.columns(2)
                 with col1:
-                    lifetime_price = st.number_input("Giá ($)", 29.99, 29999.0, 99.99, 10.0, key="lifetime_price")
-                    lifetime_pay_rate = st.slider("Pay Rate (%)", 0.0, 100.0, 0.5, 0.1, key="lifetime_pay") / 100
+                    lifetime_price = st.number_input("Giá ($)", 29.99, 29999.0, float(sim_cfg.get("lifetime_price", 99.99)), 10.0, key="lifetime_price")
+                    lifetime_pay_rate = st.slider("Pay Rate (%)", 0.0, 100.0, float(sim_cfg.get("lifetime_pay_rate", 0.5)), 0.1, key="lifetime_pay") / 100
                 with col2:
                     st.info("💡 Lifetime không có trial và không cần renewal")
                 
@@ -549,7 +573,7 @@ def render_enhanced_simulation():
         with col1:
             cpm_variation = st.slider(
                 "CPM Variation (%)",
-                min_value=0.0, max_value=5000.0, value=1.0, step=0.5,
+                min_value=0.0, max_value=5000.0, value=float(CONFIG.simulation.cpm_variation * 100), step=0.5,
                 help="Độ biến động của CPM giữa các kịch bản",
                 key="var_cpm"
             ) / 100
@@ -557,7 +581,7 @@ def render_enhanced_simulation():
         with col2:
             ctr_variation = st.slider(
                 "CTR Variation (%)",
-                min_value=0.0, max_value=5000.0, value=1.0, step=0.5,
+                min_value=0.0, max_value=5000.0, value=float(CONFIG.simulation.cpm_variation * 100), step=0.5,
                 help="Độ biến động của Click-Through Rate",
                 key="var_ctr"
             ) / 100
@@ -565,7 +589,7 @@ def render_enhanced_simulation():
         with col3:
             cvr_variation = st.slider(
                 "CVR Variation (%)",
-                min_value=0.0, max_value=6000.0, value=1.0, step=0.5,
+                min_value=0.0, max_value=6000.0, value=float(CONFIG.simulation.cvr_variation * 100), step=0.5,
                 help="Độ biến động của Conversion Rate",
                 key="var_cvr"
             ) / 100
@@ -579,7 +603,7 @@ def render_enhanced_simulation():
         with col1:
             ecpm_variation = st.slider(
                 "eCPM Variation (%)",
-                min_value=0.0, max_value=5000.0, value=1.0, step=0.5,
+                min_value=0.0, max_value=5000.0, value=float(CONFIG.simulation.cpm_variation * 100), step=0.5,
                 help="Độ biến động của eCPM",
                 key="var_ecpm"
             ) / 100
@@ -587,7 +611,7 @@ def render_enhanced_simulation():
         with col2:
             impressions_variation = st.slider(
                 "Impressions Variation (%)",
-                min_value=0.0, max_value=4000.0, value=1.0, step=0.5,
+                min_value=0.0, max_value=4000.0, value=float(CONFIG.simulation.ecpm_variation * 100), step=0.5,
                 help="Độ biến động của số lượt xem quảng cáo",
                 key="var_impressions"
             ) / 100
@@ -1157,6 +1181,8 @@ def render_enhanced_simulation():
                 custom_config.subscription.weekly.has_trial = subscription_params['weekly']['has_trial']
                 custom_config.subscription.weekly.trial_days = subscription_params['weekly']['trial_days']
                 custom_config.subscription.weekly.trial_to_paid_rate = subscription_params['weekly']['trial_to_paid']
+                custom_config.subscription.weekly.has_intro_price = subscription_params['weekly']['has_intro_price']
+                custom_config.subscription.weekly.intro_price = subscription_params['weekly']['intro_price']
                 custom_config.subscription.weekly.sub_retention.cycle_1 = subscription_params['weekly']['sub_ret_1']
                 custom_config.subscription.weekly.sub_retention.cycle_4 = subscription_params['weekly']['sub_ret_4']
                 custom_config.subscription.weekly.sub_retention.cycle_6 = subscription_params['weekly']['sub_ret_6']

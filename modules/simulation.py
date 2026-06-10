@@ -243,7 +243,8 @@ class EnhancedMonteCarloSimulator:
                     
                     # LTV_Sub = Pay_Rate × Trial_to_Paid × Sub_Retention × Price
                     # (App_Retention removed - subscription auto-renews via app store)
-                    payment = expected_subscribers * current_sub_retention * plan.price
+                    first_payment_price = plan.intro_price if getattr(plan, 'has_intro_price', False) else plan.price
+                    payment = expected_subscribers * current_sub_retention * first_payment_price
                     iap_events.append((first_day, payment))
                     
                     # Renewal payments
@@ -330,7 +331,8 @@ class EnhancedMonteCarloSimulator:
                 first_day = exploitation_day + (plan.trial_days if plan.has_trial else 0)
                 if first_day <= days:
                     current_sub_retention = 1.0
-                    payment = expected_subscribers * current_sub_retention * plan.price
+                    first_payment_price = plan.intro_price if getattr(plan, 'has_intro_price', False) else plan.price
+                    payment = expected_subscribers * current_sub_retention * first_payment_price
                     iap_events.append((first_day, payment))
                     
                     # Renewal payments with sampled renewal_mult
