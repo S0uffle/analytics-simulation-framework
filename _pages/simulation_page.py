@@ -330,13 +330,13 @@ def render_enhanced_simulation():
             st.markdown("**Chọn các gói subscription:**")
             plan_col1, plan_col2, plan_col3, plan_col4 = st.columns(4)
             with plan_col1:
-                enable_weekly = st.checkbox("📅 Weekly", value=True, key="enable_weekly")
+                enable_weekly = st.checkbox("📅 Weekly", value=sim_cfg.get("enable_weekly", True), key="enable_weekly")
             with plan_col2:
-                enable_monthly = st.checkbox("📆 Monthly", value=True, key="enable_monthly")
+                enable_monthly = st.checkbox("📆 Monthly", value=sim_cfg.get("enable_monthly", True), key="enable_monthly")
             with plan_col3:
-                enable_yearly = st.checkbox("📅 Yearly", value=False, key="enable_yearly")
+                enable_yearly = st.checkbox("📅 Yearly", value=sim_cfg.get("enable_yearly", False), key="enable_yearly")
             with plan_col4:
-                enable_lifetime = st.checkbox("♾️ Lifetime", value=False, key="enable_lifetime")
+                enable_lifetime = st.checkbox("♾️ Lifetime", value=sim_cfg.get("enable_lifetime", False), key="enable_lifetime")
             
             st.markdown("---")
             
