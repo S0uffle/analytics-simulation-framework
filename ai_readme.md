@@ -55,17 +55,4 @@ The user has indicated that **upcoming sessions will focus on reviewing and opti
 4. **Self-Healing & Validation**: If you encounter errors while testing code, try to self-correct up to 3 times before asking the user. Always validate facts using tools (e.g., checking file contents) rather than assuming.
 
 ## 6. Git Workflow & Remote Setup
-Để quản lý mã nguồn và tiếp tục làm việc trên dự án ở các máy tính khác nhau, hãy tuân thủ quy trình Git sau:
-
-**Đẩy code lên nhánh (Tại máy hiện tại):**
-Sau khi sửa đổi và commit code vào nhánh `longpvh` (hoặc nhánh làm việc của bạn), hãy đẩy lên kho chứa (Remote Server):
-```bash
-git push -u origin longpvh
-```
-
-**Lấy code về (Tại máy tính mới):**
-Khi bạn mở máy tính khác, hãy vào thư mục dự án và đồng bộ code về máy:
-```bash
-git fetch && git checkout longpvh
-```
-(Lệnh này sẽ kéo toàn bộ thông tin nhánh mới nhất từ server và chuyển không gian làm việc của bạn sang nhánh `longpvh`).
+Để quản lý mã nguồn và tiếp tục làm việc trên dự án ở các máy tính khác nhau, hãy tuân thủ quy trình Git.
